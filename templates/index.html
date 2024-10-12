@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload File to Pinata</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0F4DB8;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            width: 350px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .upload-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-box:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .upload-btn {
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #0F4DB8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .upload-btn:hover {
+            background-color: #eee;
+        }
+
+        #success-message {
+            color: #0f0;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #file-list {
+            margin-top: 20px;
+            display: none;
+        }
+
+        #toggle-files-btn {
+            margin-top: 20px;
+            background-color: #fff;
+            color: #0F4DB8;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #files li {
+            list-style: none;
+            background-color: #fff;
+            color: #000;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #files li a {
+            text-decoration: none;
+            color: #0F4DB8;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Upload File</h1>
+
+    <div class="upload-box">
+        <span class="upload-icon">+</span>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="file" id="file-input" required>
+            <button class="upload-btn" type="submit">Upload</button>
+        </form>
+    </div>
+
+    <div id="success-message">File uploaded successfully!</div>
+
+    <div id="file-list">
+        <h2>Uploaded Files</h2>
+        <ul id="files"></ul>
+    </div>
+
+    <button id="toggle-files-btn" onclick="toggleFileList()">Show Uploaded Files</button>
+</div>
+
+<script>
+document.getElementById('upload-form').onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+        addFileToList(data.file_name, data.url, data.download_url);
+        showSuccessMessage(); // Call function to show success message
+    } else {
+        alert('Upload failed: ' + data.message);
+    }
+};
+
+function addFileToList(fileName, fileUrl, downloadUrl) {
+    const fileList = document.getElementById('files');
+    const listItem = document.createElement('li');
+    
+    listItem.innerHTML = `
+        <a class="file-link" href="${fileUrl}" target="_blank">${fileName}</a>
+        <a href="${downloadUrl}" download="${fileName}" class="download-link">Download</a>
+        <button onclick="copyLink('${fileUrl}')">Copy Link</button>
+    `;
+
+    fileList.appendChild(listItem);
+}
+
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Link copied to clipboard!');
+    });
+}
+
+function toggleFileList() {
+    const fileList = document.getElementById('file-list');
+    const toggleButton = document.getElementById('toggle-files-btn');
+    if (fileList.style.display === 'none') {
+        fileList.style.display = 'block';
+        toggleButton.textContent = 'Hide Uploaded Files';
+    } else {
+        fileList.style.display = 'none';
+        toggleButton.textContent = 'Show Uploaded Files';
+    }
+}
+
+// Function to show success message
+function showSuccessMessage() {
+    const successMessage = document.getElementById('success-message');
+    successMessage.style.display = 'block'; // Show the message
+    setTimeout(() => {
+        successMessage.style.display = 'none'; // Hide it after 3 seconds
+    }, 3000);
+}
+</script>
+
+</body>
+</html>
